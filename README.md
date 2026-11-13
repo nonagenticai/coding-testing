@@ -1,5 +1,9 @@
 # coding-testing
 
+[![CI](https://github.com/nonagenticai/coding-testing/actions/workflows/ci.yml/badge.svg)](https://github.com/nonagenticai/coding-testing/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/nonagenticai/coding-testing)](https://github.com/nonagenticai/coding-testing/releases)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+
 Multi-language test execution and AI-powered test analysis service for the code_graph_helper platform. Accepts source code and test code, runs tests in isolated Docker containers across 8+ languages, stores results, and provides AI-driven insights including pattern detection, failure prediction, and smart test selection.
 
 ## Architecture
@@ -372,3 +376,19 @@ Linting uses **ruff** (not black/isort). Type checking uses **ty** (not mypy). S
 GitHub Actions workflow: `ruff + ty → build amd64 → smoke test → push`
 
 Image pushed to `192.168.1.114:5000/coding-testing:sha-<commit>`, promoted to `:latest` on success. Flux auto-deploys to K3s.
+
+## Security
+
+Report vulnerabilities privately through the repository's Security tab — see
+[`SECURITY.md`](SECURITY.md). Do not open a public issue for a security problem.
+
+## Contributing
+
+Issues and pull requests are welcome. See
+[`CONTRIBUTING.md`](https://github.com/nonagenticai/.github/blob/main/CONTRIBUTING.md) for the
+organisation-wide rules; setup, test and lint commands are in this README. Commits carry DCO
+sign-off.
+
+## License
+
+Apache-2.0 — see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
