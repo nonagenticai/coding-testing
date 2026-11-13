@@ -108,7 +108,9 @@ def _canon(value: Any) -> str:
     return json.dumps(value, sort_keys=True, separators=(",", ":"), default=str)
 
 
-def _escape(token: str | int) -> str:
+def _escape(token: object) -> str:
+    # Object keys reach us from arbitrary Python dicts (Any), so the token is any
+    # hashable; a JSON-Pointer token is its string form either way.
     return str(token).replace("~", "~0").replace("/", "~1")
 
 

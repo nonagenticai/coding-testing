@@ -6,6 +6,9 @@ from typing import Any
 
 from config.test_framework_config import TestConfig, TestFrameworkSecurityConfig
 from models.security_models import (
+    SecurityLevel as SecurityValidationLevel,
+)
+from models.security_models import (
     SecurityValidationRequest,
 )
 from models.testing_models import (
@@ -44,42 +47,39 @@ class TestConfigManager:
                 f"Code length exceeds maximum of {self.security_config.max_code_length}"
             )
 
-        # Map TestRequest security level to SecurityLevel enum
-        security_level_map = {
-            "HIGH": SecurityLevel.HIGH,
-            "MEDIUM": SecurityLevel.MEDIUM,
-            "LOW": SecurityLevel.LOW,
-        }
-
-        security_level = security_level_map.get(
-            (
-                request.security_level.value
-                if hasattr(request.security_level, "value")
-                else str(request.security_level).upper()
-            ),
-            SecurityLevel.MEDIUM,
-        )
+        # TestRequest carries TestSecurityLevel (models.testing_models) while the
+        # validation request wants models.security_models.SecurityLevel. The two
+        # enums share their values ("low"/"medium"/"high"/"critical"), so convert
+        # by value and fall back to MEDIUM for an unknown level.
+        try:
+            validation_level = SecurityValidationLevel(request.security_level.value)
+        except ValueError:
+            validation_level = SecurityValidationLevel.MEDIUM
 
         # Validate main code using SecurityService
         if code_to_validate:
             await self._validate_code_security(
-                code_to_validate, request.language, security_level, "main code"
+                code_to_validate, request.language, validation_level, "main code"
             )
 
         # Validate test code using SecurityService
         if test_code_to_validate:
             await self._validate_code_security(
-                test_code_to_validate, request.language, security_level, "test code"
+                test_code_to_validate, request.language, validation_level, "test code"
             )
 
     async def _validate_code_security(
-        self, code: str, language: str, security_level: SecurityLevel, code_type: str
+        self,
+        code: str,
+        language: str,
+        security_level: SecurityValidationLevel,
+        code_type: str,
     ) -> None:
         """Validate a piece of code using SecurityService."""
         security_request = SecurityValidationRequest(
             code=code,
             language=language,
-            security_level=security_level,  # type: ignore[invalid-argument-type]
+            security_level=security_level,
             context=None,
         )
 

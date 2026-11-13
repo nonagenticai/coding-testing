@@ -122,8 +122,11 @@ class AITestFailureAnalyzer:
     def _init_ai_agents(self) -> None:
         """Initialize PydanticAI agents for different analysis tasks."""
 
+        # The explicit generics are load-bearing: the archetype's ty (0.0.39) does
+        # not infer OutputDataT from output_type= and falls back to Agent's default
+        # str, which would make every `result.output` element a `str` below.
         # Root cause analysis agent
-        self.root_cause_agent = Agent(
+        self.root_cause_agent = Agent[None, list[RootCause]](
             self.model_name,
             output_type=list[RootCause],
             system_prompt="""
@@ -148,7 +151,7 @@ class AITestFailureAnalyzer:
         )
 
         # Fix suggestion agent
-        self.fix_suggestion_agent = Agent(
+        self.fix_suggestion_agent = Agent[None, list[FixSuggestion]](
             self.model_name,
             output_type=list[FixSuggestion],
             system_prompt="""
@@ -173,7 +176,7 @@ class AITestFailureAnalyzer:
         )
 
         # Pattern detection agent
-        self.pattern_agent = Agent(
+        self.pattern_agent = Agent[None, list[TestFailurePattern]](
             self.model_name,
             output_type=list[TestFailurePattern],
             system_prompt="""

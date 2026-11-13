@@ -1033,11 +1033,15 @@ class TestInitFailure:
             "services.ai_test_failure_analyzer.load_pydantic_ai_config_from_env"
         ) as mock_config:
             mock_config.return_value = {"provider": "openai", "model": "gpt-4o-mini"}
-            with patch(
-                "services.ai_test_failure_analyzer.Agent", side_effect=Exception("init fail")
-            ):
-                from services.ai_test_failure_analyzer import AITestFailureAnalyzer
+            from services.ai_test_failure_analyzer import AITestFailureAnalyzer
 
+            # Fail at the agent-initialization seam, not by patching the Agent
+            # symbol: the agents are built with explicit generics
+            # (Agent[None, list[...]](...)), which a symbol patch no longer
+            # intercepts. The contract under test is "init failure -> unavailable".
+            with patch.object(
+                AITestFailureAnalyzer, "_init_ai_agents", side_effect=Exception("init fail")
+            ):
                 analyzer = AITestFailureAnalyzer()
                 assert analyzer.is_available is False
                 assert analyzer.model_name == "openai:gpt-4o-mini"

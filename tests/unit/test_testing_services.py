@@ -364,6 +364,22 @@ class TestTestConfigManager:
         await m.validate_security(req)  # should not raise
 
     @pytest.mark.asyncio
+    async def test_validate_security_forwards_request_level(self):
+        from models.security_models import SecurityLevel as SecurityValidationLevel
+        from models.testing_models import TestSecurityLevel
+        from services.testing.test_config_manager import TestConfigManager
+
+        sec = AsyncMock()
+        sec.validate_code_security = AsyncMock(
+            return_value=SimpleNamespace(is_safe=True, violations=[])
+        )
+        m = TestConfigManager(security_service=sec)
+        req = _make_test_request(security_level=TestSecurityLevel.HIGH)
+        await m.validate_security(req)
+        forwarded = sec.validate_code_security.await_args.args[0]
+        assert forwarded.security_level is SecurityValidationLevel.HIGH
+
+    @pytest.mark.asyncio
     async def test_validate_security_code_too_long(self):
         from config.test_framework_config import TestFrameworkSecurityConfig
         from services.testing.test_config_manager import TestConfigManager
