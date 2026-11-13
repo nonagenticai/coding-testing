@@ -1,0 +1,37 @@
+{
+ "apiVersion": "batch/v1",
+ "kind": "Job",
+ "metadata": {
+  "name": "ci-self-heal-codeload-29885830",
+  "namespace": "actions-runners"
+ },
+ "spec": {
+  "backoffLimit": 0,
+  "activeDeadlineSeconds": 480
+ },
+ "status": {
+  "conditions": [
+   {
+    "lastProbeTime": "2026-10-28T01:18:00Z",
+    "lastTransitionTime": "2026-10-28T01:18:00Z",
+    "message": "Job was active longer than specified deadline",
+    "reason": "DeadlineExceeded",
+    "status": "True",
+    "type": "FailureTarget"
+   },
+   {
+    "lastProbeTime": "2026-10-28T01:18:32Z",
+    "lastTransitionTime": "2026-10-28T01:18:32Z",
+    "message": "Job was active longer than specified deadline",
+    "reason": "DeadlineExceeded",
+    "status": "True",
+    "type": "Failed"
+   }
+  ],
+  "failed": 1,
+  "ready": 0,
+  "startTime": "2026-10-28T01:10:00Z",
+  "terminating": 0,
+  "uncountedTerminatedPods": {}
+ }
+}

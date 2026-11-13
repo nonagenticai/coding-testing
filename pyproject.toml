@@ -1,0 +1,140 @@
+[project]
+name = "coding-testing"
+version = "1.0.0"
+license = { text = "Apache-2.0" }
+description = "Multi-language test execution, orchestration, and AI-powered analysis service for code_graph_helper"
+authors = [{name = "Nonagentic", email = "dev@nonagentic.ai"}]
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.35.0",
+    "gunicorn>=23.0.0",
+    "pydantic>=2.12.5",
+    "pydantic-settings>=2.14.2",  # CVE-2026-58203 (fix 2.14.2)
+    "httpx>=0.28.0",
+    "redis>=7.1.0",
+    "structlog>=24.4.0",
+    "sqlalchemy[asyncio]>=2.0",
+    "alembic>=1.18.4",
+    "psycopg[binary,pool]>=3.3",
+    "coding-client>=1.19.5",  # >=1.19.0: clients.CodingWorkspacesClient — the typed workspace client src/shared/container_validation.py now calls instead of hand-building /api/workspaces URLs over raw httpx. 1.16.0 has no coding_workspaces module at all, so this floor is load-bearing, not cosmetic. >=1.11.0: auth.outbound.{tenant_headers,optional_tenant_headers} take service_token=, so outbound sibling calls can present this service's OWN licence in Authorization while X-Tenant-Id still names the CUSTOMER. 1.10.1 only added the callee half (AuthMiddleware introspecting the licence Bearer).
+    # fallback (removed) — the store is Postgres-only. Keeping the driver
+    # installed is what made it possible for a local run to silently use a
+    # different engine than CI. src/services/test_execution/log_aggregation.py
+    # uses the *stdlib* sqlite3 module for node-local log files; that is a
+    # product feature, not the service database, and needs no dependency.
+    "cachetools>=5.3.0",
+    # Floor >=1.102.0 clears GHSA-cg7w-rg45-pc59 (SSRF via IPv6 transition forms; fixed 1.102.0).
+    "pydantic-ai>=1.107.9,<2.0.0",
+    # XXE-hardened XML parsing of untrusted tool output (was transitive-only).
+    "defusedxml>=0.7.1",
+    # Security floors (pip-audit, freshly-published 2026 CVEs — pre-existing on
+    # main, surfaced because the advisory DB updated): aiohttp
+    # CVE-2026-59881/69243/69244 (fix 3.14.3) + CVE-2026-111063..111066/111748..111750
+    # (fix 3.14.4), cryptography CVE-2026-69247
+    # (transitive, fix 50.0.0).
+    "aiohttp>=3.14.4",
+    "cryptography>=50.0.0",
+    "psutil>=5.9.0",
+    # Security: pin urllib3 >=2.7.0 for CVE-2026-44431 + CVE-2026-44432 (transitive via requests)
+    "urllib3>=2.8.0",
+    # OpenTelemetry
+    "opentelemetry-api>=1.45.1",
+    "opentelemetry-sdk>=1.24.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.24.0",
+    "opentelemetry-instrumentation-fastapi>=0.53b1",
+    # Security floor: pin pyasn1 ≥ 0.6.4 for PYSEC-2026-3455/3456/3457.
+    # Transitive (pyasn1-modules ← google-auth); floored here because the
+    # archetype's pip-audit gate is repo-scoped.
+    "pyasn1>=0.6.5",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0.2",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "ruff==0.17.1",
+    "ty==0.0.90",
+]
+
+[build-system]
+requires = ["setuptools>=75.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "pytest-timeout>=2.3.1",
+    "ruff==0.17.1",
+    "detect-secrets",
+    "pip-audit>=2.10.0",
+    "ty==0.0.90",
+    # PYSEC-2026-3721: pip 26.1.2 is vulnerable (transitive via pip-audit -> pip-api -> pip); explicit floor so a re-lock cannot regress
+    "pip>=26.2",
+]
+
+[tool.uv.sources]
+coding-client = { git = "https://github.com/nonagenticai/coding-client", rev = "f7f25b4e81fe4390586108a7a731608dacf462fd" }
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# Verbatim copies of a fixture repo's Alembic migrations (see the README there);
+# isort classifies `alembic` differently here because this repo has an alembic/ dir.
+"tests/data/**" = ["I001"]
+
+[tool.ty]
+
+[tool.ty.src]
+include = ["src"]
+
+
+[tool.ty.environment]
+python-version = "3.14"
+
+[tool.ty.rules]
+unresolved-import = "ignore"
+unresolved-attribute = "ignore"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = ["src"]
+testpaths = ["tests"]
+timeout = 300
+timeout_method = "thread"
+addopts = "-v --cov=src --cov-report=term-missing --cov-fail-under=85"
+filterwarnings = [
+    "ignore:.*LoggerProvider.*:DeprecationWarning",
+    "ignore:.*ProxyLoggerProvider.*:DeprecationWarning",
+    "ignore:.*Logger.*:DeprecationWarning",
+    "ignore::pytest.PytestCollectionWarning",
+]
+markers = [
+    "integration: marks tests as integration tests",
+    "e2e: marks tests as end-to-end tests",
+]
+
+[tool.coverage.run]
+concurrency = ["thread"]
+
+[tool.coverage.report]
+fail_under = 85
+
+[tool.bandit]
+# Honoured by the python-service archetype via `-c pyproject.toml`.
+# B108 (hardcoded /tmp): sandbox/tmpfs mount paths + test-path constants in the
+#   test-execution container plumbing — fixed container/volume targets, not
+#   attacker-influenced temp-file creation.
+skips = ["B108"]

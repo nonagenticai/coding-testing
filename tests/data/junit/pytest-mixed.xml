@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="1" skipped="1" tests="5" time="0.024" timestamp="2026-10-25T11:29:43.722461+01:00" hostname="mini3.local"><testcase classname="test_sample" name="test_add_passes" time="0.000" /><testcase classname="test_sample" name="test_add_fails" time="0.000"><failure message="assert 4 == 5&#10; +  where 4 = add(2, 2)">def test_add_fails():
+&gt;       assert add(2, 2) == 5
+E       assert 4 == 5
+E        +  where 4 = add(2, 2)
+
+test_sample.py:13: AssertionError</failure></testcase><testcase classname="test_sample" name="test_errors_in_setup" time="0.000"><error message="failed on setup with &quot;RuntimeError: fixture setup exploded&quot;">@pytest.fixture
+    def broken():
+&gt;       raise RuntimeError("fixture setup exploded")
+E       RuntimeError: fixture setup exploded
+
+test_sample.py:18: RuntimeError</error></testcase><testcase classname="test_sample" name="test_skipped" time="0.000"><skipped type="pytest.skip" message="not on this platform">/private/tmp/claude-501/-Users-mini3-Movies/b4840f4c-0fcd-458f-b1d5-2c7723119b6c/scratchpad/pysample/test_sample.py:25: not on this platform</skipped></testcase><testcase classname="test_sample.TestGroup" name="test_in_class" time="0.000" /></testsuite></testsuites>

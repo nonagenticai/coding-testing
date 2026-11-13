@@ -1,0 +1,122 @@
+{
+ "apiVersion": "v1",
+ "kind": "Pod",
+ "metadata": {
+  "name": "source-controller-7d6b459497-wlzk2",
+  "namespace": "flux-system"
+ },
+ "spec": {
+  "containers": [
+   {
+    "name": "manager",
+    "image": "ghcr.io/fluxcd/source-controller:v1.9.5"
+   }
+  ]
+ },
+ "status": {
+  "allocatedResources": {
+   "cpu": "50m",
+   "memory": "176Mi"
+  },
+  "conditions": [
+   {
+    "lastProbeTime": null,
+    "lastTransitionTime": "2026-10-20T15:07:11Z",
+    "observedGeneration": 1,
+    "status": "True",
+    "type": "PodReadyToStartContainers"
+   },
+   {
+    "lastProbeTime": null,
+    "lastTransitionTime": "2026-10-20T15:07:10Z",
+    "observedGeneration": 1,
+    "status": "True",
+    "type": "Initialized"
+   },
+   {
+    "lastProbeTime": null,
+    "lastTransitionTime": "2026-10-23T05:05:38Z",
+    "observedGeneration": 1,
+    "status": "True",
+    "type": "Ready"
+   },
+   {
+    "lastProbeTime": null,
+    "lastTransitionTime": "2026-10-23T05:05:38Z",
+    "observedGeneration": 1,
+    "status": "True",
+    "type": "ContainersReady"
+   },
+   {
+    "lastProbeTime": null,
+    "lastTransitionTime": "2026-10-20T15:07:10Z",
+    "observedGeneration": 1,
+    "status": "True",
+    "type": "PodScheduled"
+   }
+  ],
+  "containerStatuses": [
+   {
+    "allocatedResources": {
+     "cpu": "50m",
+     "memory": "176Mi"
+    },
+    "containerID": "containerd://94f8a5fe97d51f83fa66718a7ebe28a53a698a1a7c14e7a36ff541729f0f5306",
+    "image": "ghcr.io/fluxcd/source-controller:v1.9.5",
+    "imageID": "ghcr.io/fluxcd/source-controller@sha256:6f20d232d596a758c923d2861f23511718fc303b8a2e36a1434a7c736b9f4268",
+    "lastState": {
+     "terminated": {
+      "containerID": "containerd://89de6e561a46e42046ccc6d8da78eb39164b42792b1b82efa1a43520f69f67c9",
+      "exitCode": 1,
+      "finishedAt": "2026-10-23T05:05:26Z",
+      "reason": "Error",
+      "startedAt": "2026-10-20T15:07:15Z"
+     }
+    },
+    "name": "manager",
+    "ready": true,
+    "resources": {
+     "limits": {
+      "cpu": "1",
+      "memory": "1Gi"
+     },
+     "requests": {
+      "cpu": "50m",
+      "memory": "176Mi"
+     }
+    },
+    "restartCount": 1,
+    "started": true,
+    "state": {
+     "running": {
+      "startedAt": "2026-10-23T05:05:27Z"
+     }
+    },
+    "user": {
+     "linux": {
+      "gid": 65534,
+      "supplementalGroups": [
+       1337,
+       65534
+      ],
+      "uid": 65534
+     }
+    }
+   }
+  ],
+  "observedGeneration": 1,
+  "phase": "Running",
+  "qosClass": "Burstable",
+  "resources": {
+   "limits": {
+    "cpu": "1",
+    "memory": "1Gi"
+   },
+   "requests": {
+    "cpu": "28m",
+    "memory": "176Mi"
+   }
+  },
+  "startTime": "2026-10-20T15:07:10Z"
+ }
+}

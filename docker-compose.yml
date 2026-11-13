@@ -1,0 +1,74 @@
+services:
+  coding-testing:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: coding-testing
+
+    environment:
+      SERVICE_NAME: coding-testing
+      VERSION: 1.0.0
+      ENVIRONMENT: production
+      LOG_LEVEL: INFO
+      LOG_FORMAT: json
+      PORT: 8689
+      DEFAULT_TENANT_ID: n8n-dev
+      ENABLE_AUTH: "true"
+      ENABLE_DOCS: "true"
+
+      # Database
+      DATABASE_URL: postgresql+psycopg://coding:${POSTGRES_PASSWORD:-coding}@postgres:5432/code_graph
+      PGBOUNCER_URL: postgresql+psycopg://coding:${POSTGRES_PASSWORD:-coding}@pgbouncer:6432/code_graph
+
+      # Redis
+      REDIS_URL: redis://code-graph-redis:6379/0
+
+      # Test Executor URLs
+      PYTHON_TEST_SERVICE_URL: http://python-test-executor:8087
+      JAVASCRIPT_TEST_SERVICE_URL: http://javascript-test-executor:8085
+      QUALITY_ANALYSIS_SERVICE_URL: http://quality-analyzer:8086
+      JAVA_TEST_SERVICE_URL: http://java-test-executor:8088
+      RUST_TEST_SERVICE_URL: http://rust-test-executor:8089
+      CSHARP_TEST_SERVICE_URL: http://csharp-test-executor:8090
+      GO_TEST_SERVICE_URL: http://go-test-executor:8091
+      CPP_TEST_SERVICE_URL: http://cpp-test-executor:8094
+
+      # Cross-service URLs
+      CONTAINERS_SERVICE_URL: http://coding-containers:8691
+
+      # LLM plane (inference-router via coding-client BaseLLMAgent)
+      LLM_API_BASE_URL: ${LLM_API_BASE_URL:-http://inference-router:8150/api}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODE: ${LLM_MODE:-inference_router}
+      LLM_API_TIMEOUT_SECONDS: ${LLM_API_TIMEOUT_SECONDS:-300}
+      # inference-router PROVIDERS (not models). `gemma` is a model, not a
+      # provider; the `claude` provider is enabled:false — the old chain
+      # collapsed to one hop. Matches the router's default_chain.
+      LLM_ROUTING_DEFAULT_FALLBACK_CHAIN: ${LLM_ROUTING_DEFAULT_FALLBACK_CHAIN:-pgx-local,deepseek}
+
+      # OpenTelemetry
+      OTLP_TRACES_ENDPOINT: http://grafana-agent:4318/v1/traces
+      OTEL_SERVICE_NAME: coding-testing
+      OTEL_SDK_DISABLED: "false"
+
+    ports:
+      - "0.0.0.0:8689:8689"
+
+    networks:
+      - workflow-system-network
+
+    restart: unless-stopped
+
+    # NOTE: deliberately no `extra_hosts` pin for the database host. A pinned IP
+    # here only goes stale; let the container's resolver answer the service name.
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8689/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  workflow-system-network:
+    driver: bridge
