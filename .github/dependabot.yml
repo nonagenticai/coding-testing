@@ -1,4 +1,9 @@
 version: 2
+
+# Re-validated 2026-11-14: the pydantic-ai/openai ceilings that made every proposed
+# upgrade unsatisfiable were lifted, and coding-client is consumed from git at an exact rev.
+# GitHub only recomputes a Dependabot update job on a dependabot.yml change or its weekly
+# schedule, so this touch is what makes the record match the current graph.
 updates:
   - package-ecosystem: uv
     directory: /
