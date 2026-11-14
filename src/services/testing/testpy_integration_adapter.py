@@ -156,11 +156,11 @@ class TestPyIntegrationAdapter:
             class LegacyConfig:
                 """Legacy configuration adapter for compatibility with original config structure."""
 
-                def __init__(self, config: OriginalTestPyConfig):
+                def __init__(self, config: Any):
                     """Initialize with the original TestPy configuration."""
-                    self.security = config.security  # type: ignore[possibly-missing-attribute]
-                    self.test = config.test  # type: ignore[possibly-missing-attribute]
-                    self.logging = config.logging  # type: ignore[possibly-missing-attribute]
+                    self.security = config.security
+                    self.test = config.test
+                    self.logging = config.logging
 
             return LegacyConfig(self.config)
 
@@ -303,7 +303,7 @@ class TestPyIntegrationAdapter:
             # Use your existing test processing logic
             if self.test_runner and hasattr(self.test_runner, "_process_test_code"):
                 module_name = f"test_module_{uuid7().hex[:8]}"
-                processed_test_code = self.test_runner._process_test_code(test_content, module_name)  # type: ignore[call-non-callable]  # ty: ignore[call-non-callable]
+                processed_test_code = self.test_runner._process_test_code(test_content, module_name)  # type: ignore[call-non-callable]  # ty: ignore[not-callable]
             else:
                 # Fallback processing
                 module_name = f"test_module_{uuid7().hex[:8]}"

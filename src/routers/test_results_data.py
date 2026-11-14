@@ -792,7 +792,7 @@ async def store_computed_result(
     tenant_id: str = Depends(require_tenant),
 ) -> ComputedTestResultResponse:
     """Store an externally computed test result, idempotently."""
-    if not (project_id or "").strip():
+    if project_id is None or not project_id.strip():
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="X-Project-Id header is required: the project this test result belongs to",
