@@ -6,6 +6,38 @@
 
 Multi-language test execution and AI-powered test analysis service for the code_graph_helper platform. Accepts source code and test code, runs tests in isolated Docker containers across 8+ languages, stores results, and provides AI-driven insights including pattern detection, failure prediction, and smart test selection.
 
+| | |
+|---|---|
+| **Runtime** | Python 3.14 · FastAPI · SQLAlchemy · psycopg 3 |
+| **Depends on** | PostgreSQL 18 (results and orchestration state), Redis (cache), the language test-executor services |
+| **Runs on** | Docker/Kubernetes; `uvicorn` on port 8689 |
+
+## Quick start
+
+```bash
+git clone https://github.com/nonagenticai/coding-testing.git
+cd coding-testing
+uv sync
+
+# PostgreSQL 18 is required: the app applies alembic migrations on startup.
+docker run -d --name coding-testing-pg \
+  -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=coding_testing_test \
+  -p 127.0.0.1:5439:5432 postgres:18
+export DATABASE_URL=postgresql+psycopg://postgres:postgres@127.0.0.1:5439/coding_testing_test  # pragma: allowlist secret
+
+PYTHONPATH=src ENABLE_AUTH=false ENVIRONMENT=development \
+  uv run uvicorn main:app --host 0.0.0.0 --port 8689
+```
+
+```bash
+curl -s http://localhost:8689/health
+# {"status":"ok","service":"coding-testing","version":"1.0.0"}
+```
+
+`/health` needs no executor service. Test execution additionally needs the language
+executors and `coding-containers` listed under [Dependencies](#dependencies).
+
 ## Architecture
 
 ```
@@ -221,9 +253,9 @@ Each language has its own test executor service running in a dedicated Docker co
 | `VERSION` | `1.0.0` | Service version |
 | `ENVIRONMENT` | `production` | Environment (production/development/test) |
 | `ENABLE_AUTH` | `true` | Enable authentication middleware |
-| `DEFAULT_TENANT_ID` | `n8n-dev` | Fallback tenant for trusted-network requests |
+| `DEFAULT_TENANT_ID` | - | Fallback tenant for trusted-network requests (`docker-compose.yml` sets `n8n-dev`) |
 | `API_KEY` | - | API key for dev/test auth fallback |
-| `TRUSTED_CIDRS` | RFC1918 ranges | Trusted network CIDRs for auth bypass |
+| `TRUSTED_CIDRS` | *(empty — no source IP is trusted)* | Comma-separated CIDRs admitted without credentials |
 
 ### Data Stores
 
@@ -234,18 +266,21 @@ Each language has its own test executor service running in a dedicated Docker co
 
 ### Service URLs
 
+The settings default for every URL below is empty; `docker-compose.yml` supplies the
+in-cluster value shown in the description.
+
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PYTHON_TEST_SERVICE_URL` | `http://python-test-executor:8087` | Python executor |
-| `JAVASCRIPT_TEST_SERVICE_URL` | `http://javascript-test-executor:8085` | JS executor |
-| `JAVA_TEST_SERVICE_URL` | `http://java-test-executor:8088` | Java executor |
-| `RUST_TEST_SERVICE_URL` | `http://rust-test-executor:8089` | Rust executor |
-| `CSHARP_TEST_SERVICE_URL` | `http://csharp-test-executor:8090` | C# executor |
-| `GO_TEST_SERVICE_URL` | `http://go-test-executor:8091` | Go executor |
-| `CPP_TEST_SERVICE_URL` | `http://cpp-test-executor:8094` | C++ executor |
-| `QUALITY_ANALYSIS_SERVICE_URL` | `http://quality-analyzer:8086` | Quality analyzer |
-| `CONTAINERS_SERVICE_URL` | `http://coding-containers:8691` | Container management service |
-| `AI_SERVICE_URL` | `http://coding-ai:8690` | AI analysis service |
+| `PYTHON_TEST_SERVICE_URL` | *(unset)* | Python executor (`http://python-test-executor:8087` in compose) |
+| `JAVASCRIPT_TEST_SERVICE_URL` | *(unset)* | JS executor (`http://javascript-test-executor:8085` in compose) |
+| `JAVA_TEST_SERVICE_URL` | *(unset)* | Java executor (`http://java-test-executor:8088` in compose) |
+| `RUST_TEST_SERVICE_URL` | *(unset)* | Rust executor (`http://rust-test-executor:8089` in compose) |
+| `CSHARP_TEST_SERVICE_URL` | *(unset)* | C# executor (`http://csharp-test-executor:8090` in compose) |
+| `GO_TEST_SERVICE_URL` | *(unset)* | Go executor (`http://go-test-executor:8091` in compose) |
+| `CPP_TEST_SERVICE_URL` | *(unset)* | C++ executor (`http://cpp-test-executor:8094` in compose) |
+| `QUALITY_ANALYSIS_SERVICE_URL` | *(unset)* | Quality analyzer (`http://quality-analyzer:8086` in compose) |
+| `CONTAINERS_SERVICE_URL` | *(unset)* | Container management service (`http://coding-containers:8691` in compose) |
+| `AI_SERVICE_URL` | *(unset)* | AI analysis service (`http://coding-ai:8690` in compose) |
 
 ### PydanticAI (AI-powered analysis)
 
@@ -344,8 +379,11 @@ uv run ruff check src/           # lint
 uv run ruff format src/          # format
 uv run ty check src/             # type check
 uv run pytest                    # run tests (requires DATABASE_URL — see below)
-uv run uvicorn main:app --port 8689 --reload  # run locally
+PYTHONPATH=src uv run uvicorn main:app --port 8689 --reload  # run locally
 ```
+
+`PYTHONPATH=src` is required because the app imports its modules as top-level
+packages (`main`, `app_factory`, …), exactly as the Docker image does.
 
 ### Local test database (required)
 
@@ -373,14 +411,20 @@ Linting uses **ruff** (not black/isort). Type checking uses **ty** (not mypy). S
 
 ## CI/CD
 
-GitHub Actions workflow: `ruff + ty → build amd64 → smoke test → push`
+GitHub Actions workflow: `ruff + ty → tests on an ephemeral postgres:18 → build amd64 → /health smoke test → push`
 
-Image pushed to `192.168.1.114:5000/coding-testing:sha-<commit>`, promoted to `:latest` on success. Flux auto-deploys to K3s.
+`ci.yml` calls the public reusable workflow
+`nonagenticai/ci-workflows/.github/workflows/python-service.yml@main` and publishes
+`ghcr.io/nonagenticai/coding-testing` as `sha-<short-commit>` plus `latest`, using the job's
+`GITHUB_TOKEN` — the repository holds no registry secret. There is no deploy job: Flux watches
+this service's ImagePolicy and rolls the image when it changes.
 
 ## Security
 
-Report vulnerabilities privately through the repository's Security tab — see
-[`SECURITY.md`](SECURITY.md). Do not open a public issue for a security problem.
+Report vulnerabilities privately through this repository's Security tab ("Report a
+vulnerability"). Do not open a public issue for a security problem. This repository does not
+ship a `SECURITY.md`; private reporting is handled by GitHub's repository security advisory
+flow.
 
 ## Contributing
 
@@ -405,4 +449,4 @@ enforcement point). Neither is required to run this code.
 
 ## License
 
-Apache-2.0 — see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
+Apache-2.0 — see [`LICENSE`](LICENSE).
