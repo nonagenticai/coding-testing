@@ -55,7 +55,7 @@ dev = [
     "pytest-asyncio>=0.24.0",
     "pytest-cov>=6.0.0",
     "ruff==0.17.4",
-    "ty==0.0.90",
+    "ty==0.0.104",
 ]
 
 [build-system]
@@ -74,7 +74,7 @@ dev = [
     "ruff==0.17.4",
     "detect-secrets",
     "pip-audit>=2.10.0",
-    "ty==0.0.90",
+    "ty==0.0.104",
     # PYSEC-2026-3721: pip 26.1.2 is vulnerable (transitive via pip-audit -> pip-api -> pip); explicit floor so a re-lock cannot regress
     "pip>=26.2",
 ]
@@ -105,8 +105,8 @@ include = ["src"]
 python-version = "3.14"
 
 [tool.ty.rules]
-unresolved-import = "ignore"
-unresolved-attribute = "ignore"
+import-not-found = "ignore"
+missing-attribute = "ignore"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

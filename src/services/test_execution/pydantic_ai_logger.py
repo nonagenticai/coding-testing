@@ -292,7 +292,7 @@ class PydanticAILogger:
         }
 
         if hasattr(error, "to_dict"):
-            error_details.update(error.to_dict())  # type: ignore[call-non-callable]  # ty: ignore[call-non-callable]
+            error_details.update(error.to_dict())  # type: ignore[call-non-callable]  # ty: ignore[not-callable]
 
         if additional_context:
             error_details.update(additional_context)
