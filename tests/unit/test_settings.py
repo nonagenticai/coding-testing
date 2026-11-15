@@ -147,7 +147,7 @@ def test_quality_url_is_normalised_to_the_host_base(monkeypatch):
     from config.settings import Settings
 
     monkeypatch.setenv("ENVIRONMENT", "test")
-    base = "http://coding-analysis.coding-analysis.svc.cluster.local:8688"
+    base = "http://quality-analysis:8688"
     for raw in (base, base + "/", base + "/api/quality", base + "/api/quality/"):
         monkeypatch.setenv("QUALITY_ANALYSIS_SERVICE_URL", raw)
         assert Settings().QUALITY_ANALYSIS_SERVICE_URL == base
