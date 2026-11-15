@@ -410,6 +410,26 @@ class TestExecutionSecurityManager:
         result = mgr._sanitize_string_field("<iframe src='x'></iframe>")
         assert "<iframe" not in result.lower()
 
+    def test_sanitize_string_removes_malformed_script_end_tag(self):
+        mgr = self._make()
+        result = mgr._sanitize_string_field("<script>alert('xss')</script\t\n bar>hello")
+        assert "alert('xss')" not in result
+        assert "<script" not in result.lower()
+        assert "hello" in result
+
+    def test_sanitize_string_removes_script_end_tag_with_attributes(self):
+        mgr = self._make()
+        result = mgr._sanitize_string_field("<script>bad()</script foo='bar'>hello")
+        assert "bad()" not in result
+        assert "hello" in result
+
+    def test_sanitize_string_removes_iframe_with_odd_end_tag(self):
+        mgr = self._make()
+        result = mgr._sanitize_string_field("hi<iframe src=x>bad</iframe \n>there")
+        assert "bad" not in result
+        assert "hi" in result
+        assert "there" in result
+
     def test_sanitize_string_removes_javascript_protocol(self):
         mgr = self._make()
         result = mgr._sanitize_string_field("javascript: alert(1)")
